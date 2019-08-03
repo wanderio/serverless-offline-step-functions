@@ -55,7 +55,7 @@ class ServerlessPlugin {
         _.forEach(stateMachine.definition.States, (state, stateName) => {
             if (state.Type === stateTypes.TASK) {
                 const servicePath = this.serverless.config.servicePath;
-                let lambdaName = this.serverless.providers.aws.naming.extractLambdaNameFromArn(state.Resource);
+                let lambdaName = this.getLambdaName(state.Resource);
 
                 // store the lambda function handler in the state for reference in the JSON file
                 // it will be used to call the proper handler code when executing the fucntion
@@ -127,6 +127,32 @@ class ServerlessPlugin {
   createStepFunctionsJSON() {
     fs.writeFileSync(`${this.handlersDirectory}/step-functions.json`, JSON.stringify(this.serverless.service.stepFunctions));
   }
+
+  /**
+   * Solves the Lambda name for Fn::Get or ARN strings.
+   */
+  getLambdaName(resource) {
+    const extractors = {
+      static: this.serverless.providers.aws.naming.extractLambdaNameFromArn,
+      dynamic: this.extractLambdaNameFromFunction,
+    };
+
+    return (
+      typeof(resource) === String
+        ? extractors.static(resource)
+        : extractors.dynamic(resource)
+    );
+  };
+
+  /*
+   * Parse the Lambda name from a given Fn:Get functon.
+   */
+  extractLambdaNameFromFunction(resource) {
+    const functionDeclaration = resource['Fn::GetAtt'];
+    const functionName = functionDeclaration[0];
+
+    return functionName.replace('LambdaFunction', '').replace(/^\w/, c => c.toLowerCase());
+  };
 
   /**
    * Adds the step function configuration to the serverless config

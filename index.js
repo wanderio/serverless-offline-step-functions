@@ -39,14 +39,18 @@ class ServerlessPlugin {
    * A custom request template is used to send the state machine name and starting
    * state's name to the lambda's execution
    */
-  createEndpoints() {
+  async createEndpoints() {
     // object key in the service's custom data for config values
     const SERVERLESS_OFFLINE_STEP_FUNCTIONS = 'serverless-offline-step-functions';
     const functions = this.serverless.service.functions;
+
+    await this.getServerlessStepFunctionsPlugin().yamlParse();
+
     if (typeof this.serverless.service.stepFunctions.stateMachines === 'undefined') {
         console.warn(`${this.logPrefix}: No state machines found! Please check your stepFunctions configuration for the 'stateMachines' object.`);
         return false;
     }
+
     _.forEach(this.serverless.service.stepFunctions.stateMachines, (stateMachine, stateMachineName) => {
         if (typeof stateMachine.definition === 'undefined') {
             console.warn(`${this.logPrefix}: no 'definition' found for state machine ${stateMachineName}. Continuing to next state machine.`);
@@ -119,6 +123,17 @@ class ServerlessPlugin {
             }
         });
     });
+  }
+
+  /**
+   * Get Serverless Step Functions plugin object.
+   */
+  getServerlessStepFunctionsPlugin() {
+    const filteredPlugins = this.serverless.pluginManager.plugins.filter(
+      plugin => plugin.constructor.name == 'ServerlessStepFunctions'
+    );
+
+    return filteredPlugins[0];
   }
 
   /**

@@ -40,7 +40,7 @@ class StateMachineExecutor {
      */
     spawnProcess(stateInfo, input, context, callback = null) {
         console.log(`* * * * * ${this.currentStateName} * * * * *`);
-        console.log('input: ', input);
+        console.log('input: \n', JSON.stringify(input, 0, 2), '\n');
         // This will be used as the parent node key for when the process
         // finishes and its output needs to be processed.
         const outputKey = `sf-${Date.now()}`;
@@ -105,7 +105,7 @@ class StateMachineExecutor {
                 // newEvent.stateName = stateInfo.Next;
                 this.currentStateName = stateInfo.Next;
                 stateInfo = this.stateMachineJSON.stateMachines[this.stateMachineName].definition.States[stateInfo.Next];
-                console.log('output: ', output);
+                console.log('output: \n', JSON.stringify(output, 0, 2), '\n');
                 this.spawnProcess(stateInfo, output, context, callback);
             });
     }
@@ -125,7 +125,7 @@ class StateMachineExecutor {
             console.log(`${logPrefix} input:`, input);
         }
 
-        console.log(`${logPrefix} output:`, output);
+        console.log(`${logPrefix} output: \n`, JSON.stringify(output, 0, 2), '\n');
         return true;
     }
 
